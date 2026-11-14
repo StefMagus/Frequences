@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://gc.zgo.at 'sha256-WW9po+3OebQVHDX3iDQwuFthPxkZEQj3VwYWocnUjUg='; style-src 'self' 'sha256-rlh3o20/vjzTYQcX1mQdBKfTCkCrkYLGZhZQSbykUwQ='; img-src 'self' data: https://*.goatcounter.com; connect-src https://*.goatcounter.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://gc.zgo.at 'sha256-x98JN16xFT0yivLfvnoFnGOAc9AYmchrA89+6vRuG/s='; style-src 'self' 'sha256-rlh3o20/vjzTYQcX1mQdBKfTCkCrkYLGZhZQSbykUwQ='; img-src 'self' data: https://*.goatcounter.com; media-src 'self' blob:; connect-src https://*.goatcounter.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#1f3a6b">
 <meta name="description" content="Outil personnel de relaxation sonore / Personal sound relaxation tool">
@@ -183,6 +183,12 @@ const T = {
     importOk: "Données importées.", importBad: "Fichier non reconnu.",
     install: "📲 Installer l'application", perso: "Perso", headset: "Écouteurs",
     storageOff: "La mémoire du navigateur est bloquée : vos choix ne seront pas gardés après fermeture.",
+    bg: "Fond sonore", bgNone: "Aucun", bgRain: "Pluie", bgWaves: "Vagues", bgSoft: "Bruit doux", bgMusic: "Ma musique",
+    bgVol: "Volume du fond", bgPick: "Choisir un fichier", bgRemove: "Retirer",
+    bgMax: "Maximum 5 fichiers : retirez-en un d'abord.",
+    bgEmpty: "Aucun fichier pour l'instant.",
+    bgLocal: "Vos fichiers restent sur cet appareil. Ils ne sont jamais envoyés en ligne.",
+    bgNotSaved: "Stockage bloqué : le fichier sera joué, mais pas mémorisé.",
     footer: "Outil personnel de relaxation sonore. Ne remplace pas un avis médical. Statistiques anonymes seulement si vous acceptez, sans témoins."
   },
   en: {
@@ -219,6 +225,12 @@ const T = {
     importOk: "Data imported.", importBad: "File not recognised.",
     install: "📲 Install the app", perso: "Mine", headset: "Earphones",
     storageOff: "Browser storage is blocked: your choices won't be kept after closing.",
+    bg: "Background sound", bgNone: "None", bgRain: "Rain", bgWaves: "Waves", bgSoft: "Soft noise", bgMusic: "My music",
+    bgVol: "Background volume", bgPick: "Choose a file", bgRemove: "Remove",
+    bgMax: "5 files maximum: remove one first.",
+    bgEmpty: "No file yet.",
+    bgLocal: "Your files stay on this device. They are never sent online.",
+    bgNotSaved: "Storage blocked: the file will play but won't be remembered.",
     footer: "Personal sound relaxation tool. Not a substitute for medical advice. Anonymous statistics only if you agree, no cookies."
   }
 };
@@ -450,6 +462,240 @@ const Sound = {
   }
 };
 
+/* ===================== FOND SONORE (ambiances générées + Ma musique) ===================== */
+// Chaîne séparée : source -> Bg.env (fondus 3 s) -> Bg.master (volume du fond) -> haut-parleurs.
+// Elle ne passe PAS par Sound.master : le plafond de 30 % des fréquences aiguës ne s'applique pas
+// au fond, et il reste intact pour les fréquences.
+const BG_CHOICES = ['none', 'rain', 'waves', 'soft', 'music'];
+const getBgChoice = () => { const c = store.get('bg', 'none'); return BG_CHOICES.includes(c) ? c : 'none'; };
+const getBgVolume = () => { const v = Number(store.get('bgVol', 0.3)); return isFinite(v) ? Math.min(Math.max(v, 0), 1) : 0.3; };
+
+const Bg = {
+  env: null, master: null, src: null, buffers: {}, token: 0,
+
+  setup() {
+    const ctx = Sound.ensure();
+    if (!ctx) return null;
+    if (!this.env) {
+      this.env = ctx.createGain();
+      this.env.gain.value = 0;
+      this.master = ctx.createGain();
+      this.master.gain.value = 0;
+      this.env.connect(this.master).connect(ctx.destination);
+    }
+    return ctx;
+  },
+
+  setVolume(v) {                               // v : 0..1, sans plafond (le fond n'est pas une fréquence aiguë)
+    if (this.master) Sound.ramp(this.master.gain, 0.6 * v * v, 0.08);
+  },
+
+  // Bruit généré en temps réel (8 s en boucle, raccord fondu pour éviter un clic). Aucun fichier audio.
+  noiseBuffer(kind) {
+    if (this.buffers[kind]) return this.buffers[kind];
+    const ctx = Sound.ctx, sr = ctx.sampleRate, len = sr * 8, fade = Math.floor(sr * 0.5);
+    const buf = ctx.createBuffer(2, len, sr);
+    for (let ch = 0; ch < 2; ch++) {
+      const raw = new Float32Array(len + fade);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0, last = 0;
+      for (let i = 0; i < raw.length; i++) {
+        const w = Math.random() * 2 - 1;                       // bruit blanc
+        if (kind === 'brown') {                                // brun : bruit blanc intégré (passe-bas)
+          last = (last + 0.02 * w) / 1.02;
+          raw[i] = last * 3.5;
+        } else {                                               // rose : filtre de Paul Kellet
+          b0 = 0.99886 * b0 + w * 0.0555179; b1 = 0.99332 * b1 + w * 0.0750759;
+          b2 = 0.96900 * b2 + w * 0.1538520; b3 = 0.86650 * b3 + w * 0.3104856;
+          b4 = 0.55000 * b4 + w * 0.5329522; b5 = -0.7616 * b5 - w * 0.0168980;
+          raw[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.11;
+          b6 = w * 0.115926;
+        }
+      }
+      const data = buf.getChannelData(ch);
+      data.set(raw.subarray(0, len));
+      for (let i = 0; i < fade; i++) { const a = i / fade; data[i] = raw[i] * a + raw[len + i] * (1 - a); }
+    }
+    return (this.buffers[kind] = buf);
+  },
+
+  build(choice) {
+    const ctx = Sound.ctx, out = ctx.createGain(), nodes = [], timers = [];
+    out.gain.value = 0;
+    const loop = (kind) => {
+      const s = ctx.createBufferSource();
+      s.buffer = this.noiseBuffer(kind);
+      s.loop = true;
+      nodes.push(s);
+      return s;
+    };
+    if (choice === 'soft') {
+      // BRUIT DOUX : bruit brun + passe-bas
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 700;
+      loop('brown').connect(lp).connect(out);
+    } else if (choice === 'rain') {
+      // PLUIE : bruit rose + légères variations aléatoires (volume et timbre)
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass'; hp.frequency.value = 400;
+      const vary = ctx.createGain();
+      vary.gain.value = 0.85;
+      loop('pink').connect(hp).connect(vary).connect(out);
+      timers.push(setInterval(() => {
+        const now = ctx.currentTime;
+        vary.gain.setTargetAtTime(0.7 + Math.random() * 0.3, now, 0.4);
+        hp.frequency.setTargetAtTime(300 + Math.random() * 300, now, 0.6);
+      }, 900));
+    } else if (choice === 'waves') {
+      // VAGUES : bruit filtré dont le volume monte et descend lentement (cycle de 8 s)
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass'; lp.frequency.value = 600;
+      const swell = ctx.createGain();
+      swell.gain.value = 0.55;
+      const lfo = ctx.createOscillator();
+      lfo.frequency.value = 1 / 8;
+      const depth = ctx.createGain();
+      depth.gain.value = 0.45;                 // volume de la vague entre 0,10 et 1,00
+      const sweep = ctx.createGain();
+      sweep.gain.value = 350;                  // le timbre s'ouvre quand la vague monte
+      lfo.connect(depth).connect(swell.gain);
+      lfo.connect(sweep).connect(lp.frequency);
+      loop('pink').connect(lp).connect(swell).connect(out);
+      nodes.push(lfo);
+    } else {
+      return null;
+    }
+    out.connect(this.env);
+    nodes.forEach((n) => n.start());
+    return { out, nodes, timers, audio: null, url: null };
+  },
+
+  // MA MUSIQUE : fichier lu depuis l'appareil (IndexedDB) via un élément <audio> en boucle (URL blob:).
+  async buildMusic() {
+    const rec = await MusicDB.get(store.get('bgFile', null));
+    if (!rec || !rec.blob || !Sound.ctx) return null;
+    const url = URL.createObjectURL(rec.blob);
+    const audio = document.createElement('audio');
+    audio.loop = true;
+    audio.src = url;
+    const out = Sound.ctx.createGain();
+    out.gain.value = 0;
+    Sound.ctx.createMediaElementSource(audio).connect(out);
+    out.connect(this.env);
+    audio.play().catch(() => {});
+    return { out, nodes: [], timers: [], audio, url };
+  },
+
+  drop(layer, secs) {
+    if (!layer) return;
+    Sound.ramp(layer.out.gain, 0, secs);
+    layer.timers.forEach(clearInterval);
+    const at = Sound.ctx.currentTime + secs + 0.05;
+    layer.nodes.forEach((n) => { try { n.stop(at); } catch (e) {} });
+    setTimeout(() => {
+      if (layer.audio) { layer.audio.pause(); layer.audio.removeAttribute('src'); layer.audio.load(); }
+      if (layer.url) URL.revokeObjectURL(layer.url);
+      try { layer.out.disconnect(); } catch (e) {}
+    }, (secs + 0.3) * 1000);
+  },
+
+  async play(choice, first) {
+    const my = ++this.token;
+    this.drop(this.src, first ? 0.05 : XFADE);
+    this.src = null;
+    if (choice === 'none' || !this.setup()) return;
+    const layer = choice === 'music' ? await this.buildMusic() : this.build(choice);
+    if (!layer) return;
+    if (my !== this.token || !Session.active) { this.drop(layer, 0.05); return; }   // changé ou arrêté entre-temps
+    if (first) layer.out.gain.value = 1;       // le fondu d'entrée de 3 s est fait par Bg.env
+    else Sound.ramp(layer.out.gain, 1, XFADE);
+    this.src = layer;
+  },
+
+  begin() {                                    // démarre avec la séance
+    if (!this.setup()) return;
+    this.setVolume(getBgVolume());
+    Sound.ramp(this.env.gain, 1, FADE);        // même fondu d'entrée de 3 s
+    this.play(getBgChoice(), true);
+  },
+
+  end() {                                      // s'arrête avec la séance
+    if (!this.env) return;
+    this.token++;
+    Sound.ramp(this.env.gain, 0, FADE);        // même fondu de sortie de 3 s
+    this.drop(this.src, FADE);
+    this.src = null;
+  },
+
+  change(choice) { if (Session.active) this.play(choice, false); },
+
+  resume() { if (this.src && this.src.audio && this.src.audio.paused) this.src.audio.play().catch(() => {}); }
+};
+
+/* ===================== MA MUSIQUE : IndexedDB, LOCAL UNIQUEMENT ===================== */
+// Les fichiers restent sur l'appareil, dans l'IndexedDB du navigateur (ou en mémoire si elle est bloquée).
+// Ce module ne fait AUCUN fetch / envoi réseau et n'appelle jamais trackEvent : lecture/écriture locales seulement.
+const MUSIC_MAX = 5;
+const MusicDB = {
+  db: undefined,                               // undefined = pas encore ouverte, null = indisponible
+  mem: [],                                     // repli : joué pendant cette visite, non mémorisé
+
+  open() {
+    if (this.db !== undefined) return Promise.resolve(this.db);
+    return new Promise((resolve) => {
+      try {
+        const req = indexedDB.open('frequences-musique', 1);
+        req.onupgradeneeded = () => { req.result.createObjectStore('files', { keyPath: 'id' }); };
+        req.onsuccess = () => { this.db = req.result; resolve(this.db); };
+        req.onerror = () => { this.db = null; resolve(null); };
+      } catch (e) { this.db = null; resolve(null); }
+    });
+  },
+
+  async run(mode, fn) {
+    const db = await this.open();
+    if (!db) return undefined;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction('files', mode);
+        const req = fn(tx.objectStore('files'));
+        tx.oncomplete = () => resolve(req ? req.result : true);
+        tx.onerror = tx.onabort = () => resolve(undefined);
+      } catch (e) { resolve(undefined); }
+    });
+  },
+
+  async list() {
+    const rows = await this.run('readonly', (s) => s.getAll());
+    return (Array.isArray(rows) ? rows : []).concat(this.mem).sort((a, b) => a.added - b.added);
+  },
+
+  async get(id) {
+    if (!id) return null;
+    const m = this.mem.find((r) => r.id === id);
+    if (m) return m;
+    return (await this.run('readonly', (s) => s.get(id))) || null;
+  },
+
+  async add(file) {
+    if ((await this.list()).length >= MUSIC_MAX) return { full: true };
+    const rec = {
+      id: 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      name: String(file.name || 'audio').slice(0, 80),
+      added: Date.now(),
+      blob: file                               // le fichier lui-même, gardé sur l'appareil
+    };
+    const ok = await this.run('readwrite', (s) => { s.put(rec); });
+    if (ok === true) return { id: rec.id, saved: true };
+    this.mem.push(rec);                        // stockage bloqué ou plein : on joue quand même, sans mémoriser
+    return { id: rec.id, saved: false };
+  },
+
+  async remove(id) {
+    this.mem = this.mem.filter((r) => r.id !== id);
+    await this.run('readwrite', (s) => { s.delete(id); });
+  }
+};
+
 /* ===================== WAKE LOCK (écran allumé pendant la séance) ===================== */
 const Wake = {
   sentinel: null,
@@ -487,6 +733,7 @@ function startSession(p, cfg) {
     last: performance.now(), intention: cfg.intention || ''
   });
   Sound.begin(volumeCap(p), getVolume());
+  Bg.begin();
   Wake.acquire();
   if (!p.custom) trackEvent('lancement/' + p.id, p.name.fr);   // nom du programme seulement
   Session.timer = setInterval(tick, 250);
@@ -521,6 +768,7 @@ function stopSession(completed) {
   Session.active = false;
   clearInterval(Session.timer);
   Sound.end();
+  Bg.end();
   Wake.release();
   const p = Session.prog;
   const h = getHistory();
@@ -541,6 +789,7 @@ function stopSession(completed) {
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && Session.active) {
     Sound.ensure();
+    Bg.resume();
     Wake.acquire();
     tick();
   }
@@ -659,6 +908,73 @@ function chips(options, current, label, onPick) {
   return wrap;
 }
 
+// Choix du fond sonore (fiche programme ET séance). Rien de ce choix n'est envoyé aux statistiques.
+function bgControl() {
+  const box = h('div');
+  let seq = 0;
+  const fileInput = h('input', { type: 'file', accept: 'audio/*', hidden: true });
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files[0];
+    fileInput.value = '';
+    if (!file) return;
+    const r = await MusicDB.add(file);
+    if (r.full) { toast(t('bgMax')); return; }
+    if (!r.saved) toast(t('bgNotSaved'));
+    store.set('bgFile', r.id);
+    store.set('bg', 'music');
+    Bg.change('music');
+    draw();
+  });
+
+  const v0 = Math.round(getBgVolume() * 100);
+  const out = h('output', null, v0 + ' %');
+  const range = h('input', { type: 'range', min: 0, max: 100, step: 1, value: v0, 'aria-label': t('bgVol') });
+  range.addEventListener('input', () => {
+    const v = Number(range.value) / 100;
+    out.textContent = range.value + ' %';
+    store.set('bgVol', v);
+    Bg.setVolume(v);
+  });
+  const vol = h('div', null, h('label', { class: 'field' }, t('bgVol')),
+    h('div', { class: 'vol' }, h('span', { 'aria-hidden': 'true' }, '🌊'), range, out));
+
+  const labels = { none: 'bgNone', rain: 'bgRain', waves: 'bgWaves', soft: 'bgSoft', music: 'bgMusic' };
+  async function draw() {
+    const my = ++seq;
+    const choice = getBgChoice();
+    const kids = [
+      h('label', { class: 'field' }, t('bg')),
+      h('div', { class: 'chips', role: 'group', 'aria-label': t('bg') }, BG_CHOICES.map((c) => h('button', {
+        class: 'chip', type: 'button', 'aria-pressed': String(c === choice),
+        onclick: () => { store.set('bg', c); Bg.change(c); draw(); }
+      }, t(labels[c]))))
+    ];
+    if (choice === 'music') {
+      const files = await MusicDB.list();
+      if (my !== seq) return;
+      let current = store.get('bgFile', null);
+      if (files.length && !files.some((f) => f.id === current)) { current = files[0].id; store.set('bgFile', current); }
+      files.forEach((f) => kids.push(h('div', { class: 'card' },
+        h('button', { class: 'card-main', type: 'button', 'aria-pressed': String(f.id === current),
+          onclick: () => { store.set('bgFile', f.id); Bg.change('music'); draw(); } },
+          h('span', { class: 'card-title' }, (f.id === current ? '🔊 ' : '🎵 ') + f.name)),
+        h('button', { class: 'chip', type: 'button', onclick: async () => {
+          await MusicDB.remove(f.id);
+          if (f.id === current) { store.set('bgFile', null); Bg.change('music'); }
+          draw();
+        } }, t('bgRemove')))));
+      if (!files.length) kids.push(h('p', { class: 'muted small' }, t('bgEmpty')));
+      if (files.length >= MUSIC_MAX) kids.push(h('p', { class: 'muted small' }, t('bgMax')));
+      else kids.push(h('button', { class: 'btn', type: 'button', onclick: () => fileInput.click() }, '📁 ' + t('bgPick')));
+      kids.push(h('p', { class: 'muted small' }, t('bgLocal')));
+    }
+    vol.hidden = choice === 'none';
+    box.replaceChildren(...kids, fileInput, vol);
+  }
+  draw();
+  return box;
+}
+
 /* ===================== ÉCRANS ===================== */
 let query = '';
 const draft = {};   // réglages de la fiche en cours (durée, intention…)
@@ -751,6 +1067,7 @@ function viewProgram(id) {
     h('dl', { class: 'info' }, rows.map(([k, v]) => h('div', null, h('dt', null, k), v.nodeType ? v : h('dd', null, v)))),
     durBlock,
     volumeControl(p),
+    bgControl(),
     h('label', { class: 'field', for: 'intent' }, t('intention')), intent,
     h('button', { class: 'btn huge primary', type: 'button', onclick: () => {
       Sound.ensure();                                  // déverrouille l'audio pendant le toucher
@@ -778,7 +1095,7 @@ function viewRun() {
   runEls = {
     timer: h('div', { class: 'timer', 'aria-label': t('remaining') }),
     step: h('p', { class: 'stepline' }),
-    resume: h('button', { class: 'btn primary', type: 'button', hidden: true, onclick: () => { Sound.ensure(); } }, t('resume'))
+    resume: h('button', { class: 'btn primary', type: 'button', hidden: true, onclick: () => { Sound.ensure(); Bg.resume(); } }, t('resume'))
   };
   const v = h('div', null,
     h('div', { class: 'run' },
@@ -790,6 +1107,7 @@ function viewRun() {
     warnings(p),
     runEls.resume,
     volumeControl(p, (vol) => Sound.setVolume(vol)),
+    bgControl(),
     h('button', { class: 'btn huge danger', type: 'button', onclick: () => stopSession(false) }, t('stop')));
   return v;
 }

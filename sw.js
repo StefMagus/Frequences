@@ -2,7 +2,7 @@
    Le script GoatCounter (gc.zgo.at) et les envois (*.goatcounter.com)
    ne sont JAMAIS interceptés ni mis en cache : seules les requêtes
    de la même origine sont gérées ici. */
-const CACHE = 'frequences-v1';
+const CACHE = 'frequences-v2';
 const FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
