@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://gc.zgo.at 'sha256-WW9po+3OebQVHDX3iDQwuFthPxkZEQj3VwYWocnUjUg='; style-src 'self' 'sha256-rlh3o20/vjzTYQcX1mQdBKfTCkCrkYLGZhZQSbykUwQ='; img-src 'self' data: https://*.goatcounter.com; connect-src https://*.goatcounter.com; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1f3a6b">
+<meta name="description" content="Outil personnel de relaxation sonore / Personal sound relaxation tool">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Fréquences</title>
+<style>
+:root{
+  --bg:#f3f5fa;--surface:#ffffff;--surface2:#e9eef7;--text:#18213a;--muted:#55607a;
+  --accent:#1f6f8b;--accent-text:#ffffff;--border:#d3dae8;
+  --danger:#b3261e;--danger-bg:#fde8e7;--warn:#7a4f00;--warn-bg:#fff2cc;--star:#d39200;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0e1525;--surface:#182136;--surface2:#212c45;--text:#eef2fb;--muted:#a9b3ca;
+    --accent:#5cc0d6;--accent-text:#04222b;--border:#2d3a58;
+    --danger:#ff8f86;--danger-bg:#3b1614;--warn:#ffd36b;--warn-bg:#3a2e0b;--star:#ffd04d;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:19px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:92px}
+body.no-nav{padding-bottom:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+[hidden]{display:none !important}
+
+header.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.brand{font-weight:700;font-size:20px;display:flex;align-items:center;gap:8px}
+.brand img{width:32px;height:32px;border-radius:8px}
+.lang{min-height:52px;min-width:108px;padding:0 16px;border-radius:26px;border:2px solid var(--accent);background:transparent;font-size:20px;font-weight:600;letter-spacing:.5px}
+.lang b{color:var(--accent)}
+.lang span{opacity:.55}
+
+main{max-width:720px;margin:0 auto;padding:16px}
+h1{font-size:28px;line-height:1.2;margin:8px 0 12px}
+h2{font-size:21px;margin:26px 0 10px;color:var(--muted)}
+p{margin:8px 0}
+.muted{color:var(--muted)}
+.small{font-size:16px}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:58px;padding:12px 18px;margin:10px 0;
+  border-radius:16px;border:2px solid var(--border);background:var(--surface);font-weight:600;font-size:20px;text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+.btn.huge{min-height:84px;font-size:26px;border-radius:22px}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.ghost{background:transparent}
+.btn.back{width:auto;min-height:48px;padding:6px 14px;margin:0 0 6px;font-size:18px;border:none;background:transparent;color:var(--accent)}
+.row{display:flex;gap:10px}
+.row > *{flex:1}
+
+.search{width:100%;min-height:56px;padding:12px 16px;border-radius:16px;border:2px solid var(--border);background:var(--surface);font-size:19px}
+
+.card{display:flex;align-items:stretch;background:var(--surface);border:1px solid var(--border);border-radius:16px;margin:10px 0;overflow:hidden}
+.card-main{flex:1;text-align:left;border:none;background:transparent;padding:14px 16px;min-height:68px}
+.card-title{font-weight:650;font-size:20px;display:block}
+.card-sub{font-size:16px;color:var(--muted);display:block;margin-top:2px}
+.star{width:64px;border:none;border-left:1px solid var(--border);background:transparent;font-size:30px;color:var(--muted)}
+.star[aria-pressed="true"]{color:var(--star)}
+.badge{display:inline-block;font-size:14px;padding:1px 8px;border-radius:10px;background:var(--surface2);color:var(--muted);margin-left:6px;vertical-align:middle;font-weight:600}
+
+.info{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:6px 16px;margin:12px 0}
+.info div{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--border)}
+.info div:last-child{border-bottom:none}
+.info dt{color:var(--muted)}
+.info dd{margin:0;text-align:right;font-weight:600}
+
+.alert{border-radius:14px;padding:12px 16px;margin:12px 0;font-weight:650}
+.alert.drive{background:var(--danger-bg);color:var(--danger);border:2px solid var(--danger)}
+.alert.high{background:var(--warn-bg);color:var(--warn);border:2px solid var(--warn)}
+
+label.field{display:block;margin:16px 0 6px;font-weight:600}
+.input,textarea.input,select.input{width:100%;min-height:54px;padding:12px 14px;border-radius:14px;border:2px solid var(--border);background:var(--surface)}
+textarea.input{min-height:90px;resize:vertical}
+.hint{font-size:15px;color:var(--muted);margin-top:4px}
+.err{color:var(--danger);font-weight:600;margin:10px 0}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:50px;min-width:70px;padding:8px 14px;border-radius:25px;border:2px solid var(--border);background:var(--surface);font-weight:600}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-text)}
+
+input[type=range]{width:100%;height:44px;accent-color:var(--accent)}
+.vol{display:flex;align-items:center;gap:12px}
+.vol output{min-width:56px;text-align:right;font-weight:700}
+
+.run{text-align:center}
+.timer{font-size:68px;font-weight:700;font-variant-numeric:tabular-nums;margin:6px 0}
+.stepline{font-size:22px;font-weight:600;margin:4px 0 0}
+.pulse-wrap{display:flex;justify-content:center;align-items:center;height:230px}
+.pulse{width:170px;height:170px;border-radius:50%;background:radial-gradient(circle at 40% 35%,var(--accent),transparent 72%);
+  border:3px solid var(--accent);opacity:.85;animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(.82);opacity:.55}50%{transform:scale(1.06);opacity:.95}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+.intent{font-style:italic;color:var(--muted)}
+
+.big-emoji{font-size:84px;text-align:center;margin:10px 0}
+.center{text-align:center}
+
+.hist{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px 16px;margin:10px 0}
+.hist-date{font-size:15px;color:var(--muted)}
+.hist-name{font-weight:650}
+
+nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;background:var(--surface);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom)}
+nav.bottom a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:74px;text-decoration:none;color:var(--muted);font-size:14px;font-weight:600}
+nav.bottom a .ico{font-size:26px;line-height:1.1}
+nav.bottom a[aria-current="page"]{color:var(--accent)}
+
+footer{max-width:720px;margin:24px auto 0;padding:16px;font-size:14px;color:var(--muted);text-align:center;border-top:1px solid var(--border)}
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);z-index:9;max-width:90vw;background:var(--text);color:var(--bg);padding:12px 20px;border-radius:14px;font-weight:600;text-align:center}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="icon-192.png" alt=""><span id="brand-name">Fréquences</span></div>
+  <button class="lang" id="lang-btn" type="button"></button>
+</header>
+<main id="app"></main>
+<footer id="footer"></footer>
+<nav class="bottom" id="nav"></nav>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<script>
+'use strict';
+
+/* ===================== STOCKAGE (try/catch partout) ===================== */
+const mem = {};
+const store = {
+  get(k, d) {
+    try {
+      const v = localStorage.getItem('frq.' + k);
+      if (v !== null) return JSON.parse(v);
+    } catch (e) { /* stockage bloqué ou donnée illisible */ }
+    return (k in mem) ? mem[k] : d;
+  },
+  set(k, v) {
+    mem[k] = v;
+    try { localStorage.setItem('frq.' + k, JSON.stringify(v)); } catch (e) { /* stockage bloqué */ }
+  }
+};
+
+/* ===================== TEXTES FR / EN ===================== */
+const T = {
+  fr: {
+    appName: "Fréquences", home: "Accueil", mine: "Mes programmes", history: "Historique", settings: "Réglages",
+    search: "Rechercher un programme…", favorites: "Favoris", noResults: "Aucun programme trouvé.",
+    back: "← Retour", launch: "▶ Lancer", stop: "■ Arrêter",
+    freqs: "Fréquence(s)", mode: "Mode", duration: "Durée", stepDur: "Durée de chaque son", total: "Durée totale",
+    volume: "Volume", intention: "Mon intention (facultatif)", intentionPh: "Ex. : me détendre avant de dormir",
+    modeSingle: "Un seul son", modeEnsemble: "Tous les sons ensemble", modeSuite: "Un son après l'autre", modeBinaural: "Binaural (avec écouteurs)",
+    binDetail: (f, l, r) => `Battement de ${f} Hz : ${l} Hz à gauche, ${r} Hz à droite`,
+    drive: "Ne pas utiliser en conduisant / Do not use while driving",
+    high: "Son aigu — gardez le volume bas", highCap: "Volume limité à 30 % pour ce programme.",
+    earTitle: "Mettez vos écouteurs (un dans chaque oreille)",
+    earNote: "Écouteurs à conduction osseuse (sur l'os, oreilles libres) : effet binaural réduit.",
+    earDone: "C'est fait", remaining: "Temps restant",
+    resume: "🔊 Toucher pour reprendre le son",
+    done: "Séance terminée. Bon repos !", stopped: "Séance arrêtée.",
+    add: "+ Ajouter", edit: "Modifier", del: "Supprimer", delConfirm: "Supprimer ce programme ?",
+    mineEmpty: "Vous n'avez pas encore de programme à vous. Touchez « + Ajouter » pour en créer un.",
+    newProg: "Nouveau programme", editProg: "Modifier le programme",
+    fName: "Nom", fCat: "Catégorie", fFreqs: "Fréquences en Hz", fFreqsHint: "Séparez-les par « + ». Ex. : 396 + 528",
+    fMode: "Mode", fDur: "Durée (minutes)", fStep: "Durée de chaque son (minutes)", fDesc: "Description (facultatif)",
+    save: "Enregistrer", cancel: "Annuler",
+    errName: "Donnez un nom au programme.", errFreqs: "Entrez de 1 à 12 fréquences entre 1 et 20 000 Hz.",
+    errBin: "Binaural : battements entre 0,5 et 50 Hz.", errDur: "Durée : entre 1 et 120 minutes.",
+    errStep: "Durée de chaque son : entre 0,5 et 30 minutes.", saved: "Programme enregistré.", deleted: "Programme supprimé.",
+    histEmpty: "Aucune séance pour le moment.", histClear: "Effacer l'historique", histClearConfirm: "Effacer tout l'historique ?",
+    language: "Langue", stats: "Statistiques anonymes",
+    statsQ: "Aider Stef en partageant des statistiques anonymes ?",
+    statsExplain: "Seulement : l'ouverture de l'app, l'installation et le nom du programme lancé. Jamais votre intention, votre historique ni vos programmes. Sans témoins (cookies). Vous pourrez changer d'avis dans Réglages.",
+    yes: "Oui", no: "Non", statsOn: "Merci ! Statistiques activées.", statsOff: "Statistiques désactivées.",
+    data: "Mes données", exportBtn: "⬇ Exporter mes données", importBtn: "⬆ Importer",
+    importConfirm: "Remplacer vos données actuelles par celles du fichier ?",
+    importOk: "Données importées.", importBad: "Fichier non reconnu.",
+    install: "📲 Installer l'application", perso: "Perso", headset: "Écouteurs",
+    storageOff: "La mémoire du navigateur est bloquée : vos choix ne seront pas gardés après fermeture.",
+    footer: "Outil personnel de relaxation sonore. Ne remplace pas un avis médical. Statistiques anonymes seulement si vous acceptez, sans témoins."
+  },
+  en: {
+    appName: "Frequencies", home: "Home", mine: "My programs", history: "History", settings: "Settings",
+    search: "Search a program…", favorites: "Favourites", noResults: "No program found.",
+    back: "← Back", launch: "▶ Start", stop: "■ Stop",
+    freqs: "Frequency(ies)", mode: "Mode", duration: "Duration", stepDur: "Length of each sound", total: "Total time",
+    volume: "Volume", intention: "My intention (optional)", intentionPh: "E.g. unwind before sleep",
+    modeSingle: "A single sound", modeEnsemble: "All sounds together", modeSuite: "One sound after another", modeBinaural: "Binaural (with earphones)",
+    binDetail: (f, l, r) => `${f} Hz beat: ${l} Hz left, ${r} Hz right`,
+    drive: "Ne pas utiliser en conduisant / Do not use while driving",
+    high: "High-pitched sound — keep the volume low", highCap: "Volume limited to 30% for this program.",
+    earTitle: "Put on your earphones (one in each ear)",
+    earNote: "Bone-conduction earphones (on the bone, ears open): reduced binaural effect.",
+    earDone: "Done", remaining: "Time left",
+    resume: "🔊 Tap to bring the sound back",
+    done: "Session finished. Enjoy the calm!", stopped: "Session stopped.",
+    add: "+ Add", edit: "Edit", del: "Delete", delConfirm: "Delete this program?",
+    mineEmpty: "You don't have any program of your own yet. Tap “+ Add” to create one.",
+    newProg: "New program", editProg: "Edit program",
+    fName: "Name", fCat: "Category", fFreqs: "Frequencies in Hz", fFreqsHint: "Separate them with “+”. E.g. 396 + 528",
+    fMode: "Mode", fDur: "Duration (minutes)", fStep: "Length of each sound (minutes)", fDesc: "Description (optional)",
+    save: "Save", cancel: "Cancel",
+    errName: "Please give the program a name.", errFreqs: "Enter 1 to 12 frequencies between 1 and 20,000 Hz.",
+    errBin: "Binaural: beats between 0.5 and 50 Hz.", errDur: "Duration: between 1 and 120 minutes.",
+    errStep: "Length of each sound: between 0.5 and 30 minutes.", saved: "Program saved.", deleted: "Program deleted.",
+    histEmpty: "No sessions yet.", histClear: "Clear history", histClearConfirm: "Clear the whole history?",
+    language: "Language", stats: "Anonymous statistics",
+    statsQ: "Help Stef by sharing anonymous statistics?",
+    statsExplain: "Only: opening the app, installing it, and the name of the program started. Never your intention, your history or your own programs. No cookies. You can change your mind in Settings.",
+    yes: "Yes", no: "No", statsOn: "Thank you! Statistics enabled.", statsOff: "Statistics disabled.",
+    data: "My data", exportBtn: "⬇ Export my data", importBtn: "⬆ Import",
+    importConfirm: "Replace your current data with the file's content?",
+    importOk: "Data imported.", importBad: "File not recognised.",
+    install: "📲 Install the app", perso: "Mine", headset: "Earphones",
+    storageOff: "Browser storage is blocked: your choices won't be kept after closing.",
+    footer: "Personal sound relaxation tool. Not a substitute for medical advice. Anonymous statistics only if you agree, no cookies."
+  }
+};
+let lang = store.get('lang', 'fr') === 'en' ? 'en' : 'fr';
+const t = (k) => T[lang][k];
+const L = (o) => (typeof o === 'string' ? o : (o[lang] || o.fr));
+const fmtHz = (f) => f.toLocaleString(lang === 'fr' ? 'fr-CA' : 'en-CA', { maximumFractionDigits: 2 });
+
+/* ===================== CATALOGUE (textes originaux) ===================== */
+const CATS = [
+  { id: 'abondance', fr: 'Abondance', en: 'Abundance' },
+  { id: 'detox', fr: 'Détox', en: 'Detox' },
+  { id: 'solfege', fr: 'Solfège', en: 'Solfeggio' },
+  { id: 'solfegeplus', fr: 'Solfège+', en: 'Solfeggio+' },
+  { id: 'cerveau', fr: 'Cerveau', en: 'Brain' }
+];
+const P = (id, cat, mode, f, dur, nfr, nen, dfr, den) =>
+  ({ id, cat, mode, f, dur, step: 3, name: { fr: nfr, en: nen }, desc: { fr: dfr, en: den } });
+
+const CATALOG = [
+  P('ab-888', 'abondance', 'ensemble', [888], 15, 'Abondance 888', 'Abundance 888',
+    "Le 888 Hz est traditionnellement associé à l'abondance et à la circulation de l'énergie.",
+    '888 Hz is traditionally associated with abundance and the flow of energy.'),
+  P('ab-888-528', 'abondance', 'ensemble', [888, 528], 15, 'Duo 888 + 528', 'Duo 888 + 528',
+    "Deux sons réunis, traditionnellement associés à l'abondance et à l'ouverture du cœur.",
+    'Two sounds together, traditionally associated with abundance and an open heart.'),
+  P('ab-396-528', 'abondance', 'ensemble', [396, 528], 15, 'Duo 396 + 528', 'Duo 396 + 528',
+    'Deux sons réunis, traditionnellement associés au lâcher-prise et au renouveau.',
+    'Two sounds together, traditionally associated with letting go and renewal.'),
+  P('ab-396-417', 'abondance', 'ensemble', [396, 417], 15, 'Duo 396 + 417', 'Duo 396 + 417',
+    'Deux sons réunis, traditionnellement associés à la levée des blocages et au changement.',
+    'Two sounds together, traditionally associated with releasing blocks and welcoming change.'),
+  P('ab-777', 'abondance', 'ensemble', [777], 15, 'Chance 777', 'Good fortune 777',
+    'Le 777 Hz est traditionnellement associé à la chance et à la confiance.',
+    '777 Hz is traditionally associated with good fortune and confidence.'),
+
+  P('dx-741', 'detox', 'ensemble', [741], 15, 'Clarté 741', 'Clarity 741',
+    'Le 741 Hz est traditionnellement associé à la purification et à la clarté.',
+    '741 Hz is traditionally associated with cleansing and clarity.'),
+  P('dx-3', 'detox', 'suite', [3040, 3176, 10000], 9, 'Grand ménage', 'Fresh start',
+    'Trois sons aigus, un après l’autre, traditionnellement associés à une sensation de nettoyage et de légèreté.',
+    'Three high-pitched sounds, one after another, traditionally associated with a feeling of cleansing and lightness.'),
+  P('dx-4', 'detox', 'suite', [20, 727, 787, 880], 12, 'Purification en 4 temps', 'Four-step cleanse',
+    'Quatre sons à la suite, traditionnellement associés à la purification. Le premier (20 Hz) est très grave : on l’entend à peine sur un téléphone.',
+    'Four sounds in a row, traditionally associated with cleansing. The first one (20 Hz) is very low: barely audible on a phone.'),
+
+  ...[
+    [174, 'Ancrage', 'Grounding', "l'ancrage et la détente du corps", 'grounding and bodily relaxation'],
+    [285, 'Renouveau', 'Renewal', 'un sentiment de renouveau et de bien-être', 'a sense of renewal and well-being'],
+    [396, 'Lâcher-prise', 'Letting go', 'le lâcher-prise des peurs et de la culpabilité', 'letting go of fear and guilt'],
+    [417, 'Changement', 'Change', "l'accueil du changement et les nouveaux départs", 'welcoming change and fresh starts'],
+    [528, 'Transformation', 'Transformation', "la transformation ; on le surnomme souvent « fréquence de l'amour »", 'transformation; often nicknamed the “love frequency”'],
+    [639, 'Harmonie', 'Harmony', "l'harmonie dans les relations", 'harmony in relationships'],
+    [741, 'Expression', 'Expression', "l'expression de soi et la clarté d'esprit", 'self-expression and a clear mind'],
+    [852, 'Intuition', 'Intuition', "l'intuition et le retour à soi", 'intuition and coming back to oneself'],
+    [963, 'Unité', 'Oneness', "l'éveil et le sentiment d'unité", 'awakening and a sense of oneness']
+  ].map(([hz, nfr, nen, dfr, den]) => P('so-' + hz, 'solfege', 'ensemble', [hz], 10,
+    `${hz} Hz — ${nfr}`, `${hz} Hz — ${nen}`,
+    `Le ${hz} Hz est traditionnellement associé à ${dfr}.`.replace('associé à le ', 'associé au '),
+    `${hz} Hz is traditionally associated with ${den}.`)),
+
+  P('sp-111', 'solfegeplus', 'ensemble', [111], 10, '111 Hz — Sérénité', '111 Hz — Serenity',
+    'Le 111 Hz est traditionnellement associé à la sérénité et au renouveau intérieur.',
+    '111 Hz is traditionally associated with serenity and inner renewal.'),
+  P('sp-432', 'solfegeplus', 'ensemble', [432], 10, '432 Hz — Accord naturel', '432 Hz — Natural tuning',
+    "Le 432 Hz, dit « accord naturel », est traditionnellement associé à la douceur et à l'apaisement.",
+    '432 Hz, the so-called “natural tuning”, is traditionally associated with gentleness and calm.'),
+  P('sp-999', 'solfegeplus', 'ensemble', [999], 10, '999 Hz — Fin de cycle', '999 Hz — Completion',
+    "Le 999 Hz est traditionnellement associé à l'accomplissement et aux fins de cycle.",
+    '999 Hz is traditionally associated with completion and the end of a cycle.'),
+
+  P('br-delta', 'cerveau', 'binaural', [2], 30, 'Delta 2 Hz — Sommeil', 'Delta 2 Hz — Sleep',
+    'Battement binaural de 2 Hz. Les ondes delta sont traditionnellement associées au sommeil profond.',
+    '2 Hz binaural beat. Delta waves are traditionally associated with deep sleep.'),
+  P('br-theta', 'cerveau', 'binaural', [6], 20, 'Thêta 6 Hz — Méditation', 'Theta 6 Hz — Meditation',
+    'Battement binaural de 6 Hz. Les ondes thêta sont traditionnellement associées à la méditation et à la rêverie.',
+    '6 Hz binaural beat. Theta waves are traditionally associated with meditation and daydreaming.'),
+  P('br-alpha', 'cerveau', 'binaural', [10], 20, 'Alpha 10 Hz — Calme', 'Alpha 10 Hz — Calm',
+    'Battement binaural de 10 Hz. Les ondes alpha sont traditionnellement associées à un état calme et détendu.',
+    '10 Hz binaural beat. Alpha waves are traditionally associated with a calm, relaxed state.'),
+  P('br-schumann', 'cerveau', 'binaural', [7.83], 20, 'Schumann 7,83 Hz', 'Schumann 7.83 Hz',
+    "Battement binaural de 7,83 Hz, la « résonance de Schumann », traditionnellement associée à l'harmonie avec la nature.",
+    '7.83 Hz binaural beat, the “Schumann resonance”, traditionally associated with feeling in tune with nature.'),
+  P('br-beta', 'cerveau', 'binaural', [18], 20, 'Bêta 18 Hz — Concentration', 'Beta 18 Hz — Focus',
+    'Battement binaural de 18 Hz. Les ondes bêta sont traditionnellement associées à la concentration.',
+    '18 Hz binaural beat. Beta waves are traditionally associated with focus.'),
+  P('br-gamma', 'cerveau', 'binaural', [40], 20, 'Gamma 40 Hz — Clarté', 'Gamma 40 Hz — Clarity',
+    "Battement binaural de 40 Hz. Les ondes gamma sont traditionnellement associées à la clarté d'esprit.",
+    '40 Hz binaural beat. Gamma waves are traditionally associated with mental clarity.')
+];
+
+/* ===================== DONNÉES UTILISATEUR ===================== */
+const getCustom = () => { const c = store.get('custom', []); return Array.isArray(c) ? c : []; };
+const getFavs = () => { const f = store.get('favs', []); return Array.isArray(f) ? f : []; };
+const getHistory = () => { const h = store.get('history', []); return Array.isArray(h) ? h : []; };
+const allPrograms = () => CATALOG.concat(getCustom());
+const findProgram = (id) => allPrograms().find((p) => p.id === id);
+function storageWorks() {
+  try { localStorage.setItem('frq.__t', '1'); localStorage.removeItem('frq.__t'); return true; } catch (e) { return false; }
+}
+
+const CARRIER = 200;          // porteuse binaurale (Hz)
+const FADE = 3;               // fondu d'entrée / de sortie (s)
+const XFADE = 1.5;            // petit fondu entre les étapes (s)
+
+function modeLabel(p) {
+  if (p.mode === 'binaural') return t('modeBinaural');
+  if (p.mode === 'suite') return t('modeSuite');
+  return p.f.length > 1 ? t('modeEnsemble') : t('modeSingle');
+}
+function freqLabel(p) {
+  if (p.mode === 'binaural') return p.f.map((f) => fmtHz(f) + ' Hz').join(' → ') + ' (binaural)';
+  return p.f.map((f) => fmtHz(f) + ' Hz').join(p.mode === 'suite' ? ' → ' : ' + ');
+}
+function needsDriveWarning(p) {
+  const names = (typeof p.name === 'string' ? p.name : p.name.fr + ' ' + p.name.en);
+  return (p.mode === 'binaural' && p.f.some((f) => f < 8)) || /sommeil|sleep|m[ée]dit/i.test(names);
+}
+
+/* ===================== PLAFOND DE VOLUME (> 5000 Hz) ===================== */
+const HIGH_HZ = 5000;
+const HIGH_CAP = 0.30;
+function isHigh(p) { return p.mode !== 'binaural' && p.f.some((f) => f > HIGH_HZ); }
+function volumeCap(p) { return isHigh(p) ? HIGH_CAP : 1; }
+function cappedVolume(p, v) { return Math.max(0, Math.min(v, volumeCap(p))); }
+
+/* ===================== AUDIO (Web Audio API) ===================== */
+// Chaîne : couche(s) d'oscillateurs -> env (fondus 3 s) -> master (volume) -> haut-parleurs
+const Sound = {
+  ctx: null, env: null, master: null, layer: null, cap: 1,
+
+  ensure() {                                   // appelé uniquement depuis un toucher (Lancer / C'est fait)
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      this.ctx = new AC();
+      this.env = this.ctx.createGain();
+      this.env.gain.value = 0;
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0;
+      this.env.connect(this.master).connect(this.ctx.destination);
+      this.ctx.addEventListener('statechange', onAudioState);
+    }
+    if (this.ctx.state !== 'running') this.ctx.resume().catch(() => {});
+    return this.ctx;
+  },
+
+  ramp(param, to, secs) {
+    const now = this.ctx.currentTime;
+    param.cancelScheduledValues(now);
+    param.setValueAtTime(param.value, now);
+    param.linearRampToValueAtTime(to, now + secs);
+  },
+
+  setVolume(v) {                               // v : 0..1, toujours plafonné
+    if (!this.ctx) return;
+    const safe = Math.min(Math.max(v, 0), this.cap);
+    this.ramp(this.master.gain, 0.6 * safe * safe, 0.08);
+  },
+
+  // Construit une couche sonore pour une étape.
+  buildLayer(mode, freqs) {
+    const ctx = this.ctx;
+    const out = ctx.createGain();
+    out.gain.value = 0;
+    const oscs = [];
+    if (mode === 'binaural') {
+      // BINAURAL : porteuse 200 Hz à gauche, 200 + f Hz à droite
+      const beat = freqs[0];
+      const merger = ctx.createChannelMerger(2);
+      const left = ctx.createOscillator();
+      const right = ctx.createOscillator();
+      left.type = right.type = 'sine';
+      left.frequency.value = CARRIER;
+      right.frequency.value = CARRIER + beat;
+      left.connect(merger, 0, 0);              // canal 0 = oreille gauche
+      right.connect(merger, 0, 1);             // canal 1 = oreille droite
+      merger.connect(out);
+      oscs.push(left, right);
+    } else {
+      // ENSEMBLE (et « à la suite », une fréquence par étape) :
+      // toutes les fréquences de l'étape en même temps, volume divisé par leur nombre
+      const share = 1 / freqs.length;
+      for (const f of freqs) {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        const g = ctx.createGain();
+        g.gain.value = share;
+        osc.connect(g).connect(out);
+        oscs.push(osc);
+      }
+    }
+    out.connect(this.env);
+    oscs.forEach((o) => o.start());
+    return { out, oscs };
+  },
+
+  dropLayer(layer, secs) {
+    if (!layer) return;
+    this.ramp(layer.out.gain, 0, secs);
+    const stopAt = this.ctx.currentTime + secs + 0.05;
+    layer.oscs.forEach((o) => { try { o.stop(stopAt); } catch (e) {} });
+    setTimeout(() => { try { layer.out.disconnect(); } catch (e) {} }, (secs + 0.3) * 1000);
+  },
+
+  // Passe à une étape : la nouvelle couche monte pendant que l'ancienne descend (petit fondu).
+  setStep(mode, freqs, first) {
+    const next = this.buildLayer(mode, freqs);
+    if (first) next.out.gain.value = 1;        // le fondu d'entrée de 3 s est fait par env
+    else this.ramp(next.out.gain, 1, XFADE);
+    this.dropLayer(this.layer, first ? 0.05 : XFADE);
+    this.layer = next;
+  },
+
+  begin(cap, volume) {
+    this.cap = cap;
+    this.setVolume(volume);
+    this.ramp(this.env.gain, 1, FADE);         // fondu d'entrée 3 s
+  },
+
+  end() {
+    if (!this.ctx) return;
+    this.ramp(this.env.gain, 0, FADE);         // fondu de sortie 3 s
+    this.dropLayer(this.layer, FADE);
+    this.layer = null;
+    const ctx = this.ctx;
+    setTimeout(() => { if (!Session.active && ctx.state === 'running') ctx.suspend().catch(() => {}); }, (FADE + 0.5) * 1000);
+  }
+};
+
+/* ===================== WAKE LOCK (écran allumé pendant la séance) ===================== */
+const Wake = {
+  sentinel: null,
+  async acquire() {
+    if (!('wakeLock' in navigator) || this.sentinel || document.visibilityState !== 'visible') return;
+    try {
+      const s = await navigator.wakeLock.request('screen');
+      if (!Session.active) { s.release().catch(() => {}); return; }   // séance arrêtée entre-temps
+      this.sentinel = s;
+      s.addEventListener('release', () => { if (this.sentinel === s) this.sentinel = null; });
+    } catch (e) { this.sentinel = null; }      // refusé (batterie faible, etc.) : on continue sans
+  },
+  async release() {
+    const s = this.sentinel;
+    this.sentinel = null;
+    if (s) { try { await s.release(); } catch (e) {} }
+  }
+};
+
+/* ===================== SÉANCE ===================== */
+const Session = { active: false };
+let lastDone = null;
+
+function startSession(p, cfg) {
+  if (!Sound.ensure()) return;
+  const steps = p.f.map((f) => [f]);
+  const plan = p.mode === 'ensemble'
+    ? { steps: [p.f], stepSec: cfg.minutes * 60 }
+    : p.mode === 'suite'
+      ? { steps, stepSec: cfg.step * 60 }
+      : { steps, stepSec: (cfg.minutes * 60) / steps.length };
+  Object.assign(Session, {
+    active: true, prog: p, mode: p.mode, steps: plan.steps, stepSec: plan.stepSec,
+    total: plan.stepSec * plan.steps.length, elapsed: 0, idx: -1,
+    last: performance.now(), intention: cfg.intention || ''
+  });
+  Sound.begin(volumeCap(p), getVolume());
+  Wake.acquire();
+  if (!p.custom) trackEvent('lancement/' + p.id, p.name.fr);   // nom du programme seulement
+  Session.timer = setInterval(tick, 250);
+  location.hash = '#run';
+  tick();
+}
+
+function onAudioState() {
+  if (!Session.active) return;
+  const now = performance.now();
+  if (Sound.ctx.state !== 'running') Session.elapsed += (now - Session.last) / 1000;
+  Session.last = now;
+  updateRun();
+}
+
+function tick() {
+  if (!Session.active) return;
+  const now = performance.now();
+  if (Sound.ctx.state === 'running') Session.elapsed += (now - Session.last) / 1000;  // ne compte que le temps entendu
+  Session.last = now;
+  if (Session.elapsed >= Session.total) { stopSession(true); return; }
+  const i = Math.min(Session.steps.length - 1, Math.floor(Session.elapsed / Session.stepSec));
+  if (i !== Session.idx) {
+    Sound.setStep(Session.mode, Session.steps[i], Session.idx === -1);
+    Session.idx = i;
+  }
+  updateRun();
+}
+
+function stopSession(completed) {
+  if (!Session.active) return;
+  Session.active = false;
+  clearInterval(Session.timer);
+  Sound.end();
+  Wake.release();
+  const p = Session.prog;
+  const h = getHistory();
+  h.unshift({
+    d: Date.now(),
+    name: p.custom ? p.name : { fr: p.name.fr, en: p.name.en },
+    sec: Math.round(Math.min(Session.elapsed, Session.total)),
+    intention: Session.intention
+  });
+  store.set('history', h.slice(0, 500));
+  if (location.hash === '#run') {
+    lastDone = completed ? 'done' : 'stopped';
+    location.replace('#home');
+  }
+}
+
+// Retour sur l'écran : reprendre l'audio coupé et redemander le Wake Lock (relâché automatiquement en arrière-plan).
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && Session.active) {
+    Sound.ensure();
+    Wake.acquire();
+    tick();
+  }
+});
+
+/* ===================== STATISTIQUES (GoatCounter, opt-in, sans témoins) ===================== */
+const GC_SCRIPT = 'https://gc.zgo.at/count.js';
+const GC_ENDPOINT = 'https://stef-frequences.goatcounter.com/count';
+let gcRequested = false;
+
+function statsChoice() { return store.get('stats', null); }      // null = pas encore répondu = NON
+function statsAllowed() { return statsChoice() === 'yes'; }
+
+function loadStats() {
+  // Le script n'est inséré QUE si la réponse mémorisée est « Oui », et seulement en ligne.
+  if (!statsAllowed() || gcRequested || !navigator.onLine) return;
+  gcRequested = true;
+  const s = document.createElement('script');
+  s.async = true;
+  s.src = GC_SCRIPT;
+  s.setAttribute('data-goatcounter', GC_ENDPOINT);   // compte l'ouverture de l'app au chargement
+  s.onerror = () => { gcRequested = false; s.remove(); };   // hors ligne / bloqué : silence
+  document.head.appendChild(s);
+}
+
+function trackEvent(path, title) {
+  if (!statsAllowed() || !navigator.onLine) return;
+  try {
+    if (window.goatcounter && typeof window.goatcounter.count === 'function') {
+      window.goatcounter.count({ path, title: title || path, event: true });
+    }
+  } catch (e) { /* aucune erreur visible */ }
+}
+
+function setStats(choice) {
+  store.set('stats', choice === 'yes' ? 'yes' : 'no');
+  if (choice === 'yes') loadStats();
+}
+
+window.addEventListener('online', loadStats);
+
+/* ===================== INSTALLATION ===================== */
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvt = e; refreshInstall(); });
+window.addEventListener('appinstalled', () => { installEvt = null; refreshInstall(); trackEvent('installation', 'appinstalled'); });
+function refreshInstall() { document.querySelectorAll('.install-btn').forEach((b) => { b.hidden = !installEvt; }); }
+function installButton() {
+  const b = h('button', { class: 'btn primary install-btn', type: 'button', onclick: async () => {
+    if (!installEvt) return;
+    installEvt.prompt();
+    try { await installEvt.userChoice; } catch (e) {}
+    installEvt = null; refreshInstall();
+  } }, t('install'));
+  b.hidden = !installEvt;
+  return b;
+}
+
+/* ===================== OUTILS D'INTERFACE ===================== */
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  if (props) for (const [k, v] of Object.entries(props)) {
+    if (v === null || v === undefined || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of kids.flat()) if (c !== null && c !== undefined && c !== false) el.append(c.nodeType ? c : String(c));
+  return el;
+}
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.hidden = true; }, 3200);
+}
+const go = (hash) => { location.hash = hash; };
+const backBtn = (hash) => h('button', { class: 'btn back', type: 'button', onclick: () => go(hash) }, t('back'));
+function fmtClock(sec) {
+  sec = Math.max(0, Math.ceil(sec));
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+function fmtDur(sec) {
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m ? `${m} min${s ? ' ' + s + ' s' : ''}` : `${s} s`;
+}
+const fmtMin = (m) => `${String(m).replace('.', lang === 'fr' ? ',' : '.')} min`;
+function getVolume() { const v = Number(store.get('vol', 0.25)); return isFinite(v) ? Math.min(Math.max(v, 0), 1) : 0.25; }
+
+function volumeControl(p, onChange) {
+  const cap = volumeCap(p);
+  const value = Math.round(cappedVolume(p, getVolume()) * 100);
+  const out = h('output', null, value + ' %');
+  const range = h('input', { type: 'range', min: 0, max: Math.round(cap * 100), step: 1, value, 'aria-label': t('volume') });
+  range.addEventListener('input', () => {
+    const v = cappedVolume(p, Number(range.value) / 100);
+    out.textContent = Math.round(v * 100) + ' %';
+    store.set('vol', v);
+    if (onChange) onChange(v);
+  });
+  return h('div', null, h('label', { class: 'field' }, t('volume')), h('div', { class: 'vol' }, h('span', { 'aria-hidden': 'true' }, '🔈'), range, out));
+}
+function warnings(p) {
+  return [
+    needsDriveWarning(p) ? h('div', { class: 'alert drive', role: 'alert' }, '⚠ ' + t('drive')) : null,
+    isHigh(p) ? h('div', { class: 'alert high' }, '⚠ ' + t('high'), h('div', { class: 'small' }, t('highCap'))) : null
+  ];
+}
+function chips(options, current, label, onPick) {
+  const wrap = h('div', { class: 'chips', role: 'group', 'aria-label': label });
+  options.forEach((o) => wrap.append(h('button', {
+    class: 'chip', type: 'button', 'aria-pressed': String(o === current),
+    onclick: () => { wrap.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-pressed', 'false')); wrapPick(o); }
+  }, fmtMin(o))));
+  function wrapPick(o) { [...wrap.children][options.indexOf(o)].setAttribute('aria-pressed', 'true'); onPick(o); }
+  return wrap;
+}
+
+/* ===================== ÉCRANS ===================== */
+let query = '';
+const draft = {};   // réglages de la fiche en cours (durée, intention…)
+
+function viewStatsAsk() {
+  return h('div', { class: 'center' },
+    h('div', { class: 'big-emoji', 'aria-hidden': 'true' }, '📊'),
+    h('h1', null, t('statsQ')),
+    h('p', { class: 'muted' }, t('statsExplain')),
+    h('div', { class: 'row' },
+      h('button', { class: 'btn huge', type: 'button', onclick: () => { setStats('no'); render(); } }, t('no')),
+      h('button', { class: 'btn huge primary', type: 'button', onclick: () => { setStats('yes'); render(); } }, t('yes'))));
+}
+
+function programCard(p) {
+  const favs = getFavs();
+  const fav = favs.includes(p.id);
+  return h('div', { class: 'card' },
+    h('button', { class: 'card-main', type: 'button', onclick: () => go('#p/' + encodeURIComponent(p.id)) },
+      h('span', { class: 'card-title' }, L(p.name),
+        p.mode === 'binaural' ? h('span', { class: 'badge', title: t('headset') }, '🎧') : null,
+        p.custom ? h('span', { class: 'badge' }, t('perso')) : null),
+      h('span', { class: 'card-sub' }, freqLabel(p))),
+    h('button', { class: 'star', type: 'button', 'aria-pressed': String(fav),
+      'aria-label': t('favorites') + ' : ' + L(p.name),
+      onclick: () => {
+        const f = getFavs();
+        store.set('favs', fav ? f.filter((x) => x !== p.id) : f.concat(p.id));
+        renderList();
+      } }, fav ? '★' : '☆'));
+}
+
+let listBox = null;
+function renderList() {
+  if (!listBox) return;
+  const q = query.trim().toLowerCase();
+  const progs = allPrograms().filter((p) => !q ||
+    [L(p.name), L(p.desc || ''), p.f.join(' '), freqLabel(p)].join(' ').toLowerCase().includes(q));
+  const kids = [];
+  const favs = getFavs();
+  const favProgs = progs.filter((p) => favs.includes(p.id));
+  if (favProgs.length) kids.push(h('h2', null, '★ ' + t('favorites')), favProgs.map(programCard));
+  for (const c of CATS) {
+    const inCat = progs.filter((p) => p.cat === c.id);
+    if (inCat.length) kids.push(h('h2', null, L(c)), inCat.map(programCard));
+  }
+  if (!progs.length) kids.push(h('p', { class: 'muted center' }, t('noResults')));
+  listBox.replaceChildren(...kids.flat());
+}
+
+function viewHome() {
+  const search = h('input', { class: 'search', type: 'search', placeholder: t('search'), 'aria-label': t('search'), value: query });
+  search.addEventListener('input', () => { query = search.value; renderList(); });
+  listBox = h('div');
+  const msg = lastDone ? h('div', { class: 'info center' }, h('p', null, t(lastDone))) : null;
+  lastDone = null;
+  renderList();
+  return h('div', null, msg, installButton(), search, listBox);
+}
+
+function viewProgram(id) {
+  const p = findProgram(id);
+  if (!p) return viewHome();
+  if (draft.id !== p.id) Object.assign(draft, { id: p.id, minutes: p.dur || 10, step: p.step || 3, intention: '' });
+  const rows = [
+    [t('freqs'), p.mode === 'binaural' ? p.f.map((f) => T[lang].binDetail(fmtHz(f), CARRIER, fmtHz(CARRIER + f))).join(' → ') : freqLabel(p)],
+    [t('mode'), modeLabel(p)]
+  ];
+  const totalOut = h('dd');
+  const durBlock = h('div');
+  if (p.mode === 'suite') {
+    const upd = () => { totalOut.textContent = fmtDur(Math.round(draft.step * 60 * p.f.length)); };
+    durBlock.append(h('label', { class: 'field' }, t('stepDur')),
+      chips([1, 2, 3, 5, 10], draft.step, t('stepDur'), (v) => { draft.step = v; upd(); }));
+    rows.push([t('total'), totalOut]);
+    upd();
+  } else {
+    const opts = [...new Set([5, 10, 15, 20, 30, 45, 60, draft.minutes])].sort((a, b) => a - b);
+    durBlock.append(h('label', { class: 'field' }, t('duration')),
+      chips(opts, draft.minutes, t('duration'), (v) => { draft.minutes = v; }));
+  }
+  const intent = h('textarea', { class: 'input', maxlength: 200, placeholder: t('intentionPh'), id: 'intent' });
+  intent.value = draft.intention;
+  intent.addEventListener('input', () => { draft.intention = intent.value; });
+  return h('div', null,
+    backBtn('#home'),
+    h('h1', null, L(p.name), p.mode === 'binaural' ? h('span', { title: t('headset') }, ' 🎧') : null),
+    p.desc ? h('p', null, L(p.desc)) : null,
+    warnings(p),
+    h('dl', { class: 'info' }, rows.map(([k, v]) => h('div', null, h('dt', null, k), v.nodeType ? v : h('dd', null, v)))),
+    durBlock,
+    volumeControl(p),
+    h('label', { class: 'field', for: 'intent' }, t('intention')), intent,
+    h('button', { class: 'btn huge primary', type: 'button', onclick: () => {
+      Sound.ensure();                                  // déverrouille l'audio pendant le toucher
+      if (p.mode === 'binaural') go('#ear/' + encodeURIComponent(p.id));
+      else startSession(p, draft);
+    } }, t('launch')));
+}
+
+function viewEar(id) {
+  const p = findProgram(id);
+  if (!p) return viewHome();
+  return h('div', { class: 'center' },
+    backBtn('#p/' + encodeURIComponent(p.id)),
+    h('div', { class: 'big-emoji', 'aria-hidden': 'true' }, '🎧'),
+    h('h1', null, t('earTitle')),
+    warnings(p),
+    h('button', { class: 'btn huge primary', type: 'button', onclick: () => startSession(p, draft) }, t('earDone')),
+    h('p', { class: 'muted small' }, t('earNote')));
+}
+
+let runEls = null;
+function viewRun() {
+  if (!Session.active) return viewHome();
+  const p = Session.prog;
+  runEls = {
+    timer: h('div', { class: 'timer', 'aria-label': t('remaining') }),
+    step: h('p', { class: 'stepline' }),
+    resume: h('button', { class: 'btn primary', type: 'button', hidden: true, onclick: () => { Sound.ensure(); } }, t('resume'))
+  };
+  const v = h('div', null,
+    h('div', { class: 'run' },
+      h('h1', null, L(p.name)),
+      h('p', { class: 'muted' }, t('remaining')),
+      runEls.timer, runEls.step,
+      h('div', { class: 'pulse-wrap', 'aria-hidden': 'true' }, h('div', { class: 'pulse' })),
+      Session.intention ? h('p', { class: 'intent' }, '« ' + Session.intention + ' »') : null),
+    warnings(p),
+    runEls.resume,
+    volumeControl(p, (vol) => Sound.setVolume(vol)),
+    h('button', { class: 'btn huge danger', type: 'button', onclick: () => stopSession(false) }, t('stop')));
+  return v;
+}
+function updateRun() {
+  if (!runEls || !Session.active) return;
+  runEls.timer.textContent = fmtClock(Session.total - Session.elapsed);
+  const i = Math.max(0, Session.idx);
+  const f = Session.steps[i];
+  runEls.step.textContent = `${i + 1} / ${Session.steps.length} — ` +
+    f.map((x) => fmtHz(x) + ' Hz').join(' + ') + (Session.mode === 'binaural' ? ' (binaural)' : '');
+  runEls.resume.hidden = !Sound.ctx || Sound.ctx.state === 'running';
+}
+
+function viewMine() {
+  const mine = getCustom();
+  return h('div', null,
+    h('h1', null, t('mine')),
+    h('button', { class: 'btn huge primary', type: 'button', onclick: () => go('#edit/new') }, t('add')),
+    mine.length ? mine.map((p) => h('div', { class: 'hist' },
+      h('div', { class: 'hist-name' }, p.name),
+      h('div', { class: 'muted small' }, L(CATS.find((c) => c.id === p.cat) || CATS[0]) + ' · ' + freqLabel(p)),
+      h('div', { class: 'row' },
+        h('button', { class: 'btn', type: 'button', onclick: () => go('#edit/' + encodeURIComponent(p.id)) }, t('edit')),
+        h('button', { class: 'btn ghost', type: 'button', onclick: () => {
+          if (!window.confirm(t('delConfirm'))) return;
+          store.set('custom', getCustom().filter((x) => x.id !== p.id));
+          store.set('favs', getFavs().filter((x) => x !== p.id));
+          toast(t('deleted')); render();
+        } }, t('del')))))
+      : h('p', { class: 'muted' }, t('mineEmpty')));
+}
+
+function parseFreqs(s) {
+  return String(s).replace(/(\d),(\d)/g, '$1.$2').split(/[^0-9.]+/).filter(Boolean).map(Number).filter((n) => isFinite(n));
+}
+// Valide (et nettoie) un programme perso — utilisé par le formulaire ET par l'import.
+function validateProgram(o) {
+  if (!o || typeof o !== 'object') return { err: 'errName' };
+  const name = String(o.name || '').trim().slice(0, 60);
+  if (!name) return { err: 'errName' };
+  const mode = ['ensemble', 'suite', 'binaural'].includes(o.mode) ? o.mode : 'ensemble';
+  const f = (Array.isArray(o.f) ? o.f.map(Number) : parseFreqs(o.f)).filter((n) => isFinite(n));
+  if (!f.length || f.length > 12) return { err: 'errFreqs' };
+  if (mode === 'binaural' ? f.some((x) => x < 0.5 || x > 50) : f.some((x) => x < 1 || x > 20000)) {
+    return { err: mode === 'binaural' ? 'errBin' : 'errFreqs' };
+  }
+  const dur = Number(o.dur), step = Number(o.step);
+  if (mode !== 'suite' && !(dur >= 1 && dur <= 120)) return { err: 'errDur' };
+  if (mode === 'suite' && !(step >= 0.5 && step <= 30)) return { err: 'errStep' };
+  return { prog: {
+    id: /^c[a-z0-9]{4,30}$/.test(o.id) ? o.id : 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    custom: true, name, mode, f: f.map((x) => Math.round(x * 100) / 100),
+    cat: CATS.some((c) => c.id === o.cat) ? o.cat : 'abondance',
+    dur: mode === 'suite' ? 10 : Math.round(dur), step: mode === 'suite' ? step : 3,
+    desc: String(o.desc || '').trim().slice(0, 300)
+  } };
+}
+
+function viewEdit(id) {
+  const existing = id === 'new' ? null : getCustom().find((p) => p.id === id);
+  const p = existing || { name: '', cat: 'abondance', mode: 'ensemble', f: [], dur: 10, step: 3, desc: '' };
+  const name = h('input', { class: 'input', id: 'f-name', maxlength: 60, value: p.name });
+  const cat = h('select', { class: 'input', id: 'f-cat' }, CATS.map((c) => h('option', { value: c.id, selected: c.id === p.cat }, L(c))));
+  const freqs = h('input', { class: 'input', id: 'f-freqs', inputmode: 'decimal', value: p.f.map(fmtHz).join(' + '), placeholder: '396 + 528' });
+  const mode = h('select', { class: 'input', id: 'f-mode' },
+    [['ensemble', t('modeEnsemble')], ['suite', t('modeSuite')], ['binaural', t('modeBinaural')]]
+      .map(([v, l]) => h('option', { value: v, selected: v === p.mode }, l)));
+  const dur = h('input', { class: 'input', id: 'f-dur', type: 'number', min: 1, max: 120, inputmode: 'numeric', value: p.dur });
+  const step = h('input', { class: 'input', id: 'f-step', type: 'number', min: 0.5, max: 30, step: 0.5, inputmode: 'decimal', value: p.step });
+  const durWrap = h('div', null, h('label', { class: 'field', for: 'f-dur' }, t('fDur')), dur);
+  const stepWrap = h('div', null, h('label', { class: 'field', for: 'f-step' }, t('fStep')), step);
+  const syncMode = () => { durWrap.hidden = mode.value === 'suite'; stepWrap.hidden = mode.value !== 'suite'; };
+  mode.addEventListener('change', syncMode); syncMode();
+  const desc = h('textarea', { class: 'input', id: 'f-desc', maxlength: 300 }); desc.value = p.desc || '';
+  const err = h('div', { class: 'err', role: 'alert' });
+  return h('div', null,
+    backBtn('#mine'),
+    h('h1', null, existing ? t('editProg') : t('newProg')),
+    h('label', { class: 'field', for: 'f-name' }, t('fName')), name,
+    h('label', { class: 'field', for: 'f-cat' }, t('fCat')), cat,
+    h('label', { class: 'field', for: 'f-freqs' }, t('fFreqs')), freqs, h('div', { class: 'hint' }, t('fFreqsHint')),
+    h('label', { class: 'field', for: 'f-mode' }, t('fMode')), mode,
+    durWrap, stepWrap,
+    h('label', { class: 'field', for: 'f-desc' }, t('fDesc')), desc,
+    err,
+    h('button', { class: 'btn huge primary', type: 'button', onclick: () => {
+      const r = validateProgram({ id: existing && existing.id, name: name.value, cat: cat.value, f: freqs.value,
+        mode: mode.value, dur: dur.value, step: String(step.value).replace(',', '.'), desc: desc.value });
+      if (r.err) { err.textContent = t(r.err); return; }
+      const list = getCustom().filter((x) => x.id !== r.prog.id);
+      list.push(r.prog);
+      store.set('custom', list);
+      toast(t('saved')); go('#mine');
+    } }, t('save')),
+    h('button', { class: 'btn ghost', type: 'button', onclick: () => go('#mine') }, t('cancel')));
+}
+
+function viewHistory() {
+  const hist = getHistory();
+  return h('div', null,
+    h('h1', null, t('history')),
+    hist.length ? hist.map((e) => h('div', { class: 'hist' },
+      h('div', { class: 'hist-date' }, new Date(e.d).toLocaleString(lang === 'fr' ? 'fr-CA' : 'en-CA', { dateStyle: 'medium', timeStyle: 'short' })),
+      h('div', { class: 'hist-name' }, L(e.name || '')),
+      h('div', { class: 'muted' }, fmtDur(Number(e.sec) || 0)),
+      e.intention ? h('div', { class: 'intent' }, '« ' + e.intention + ' »') : null)) : h('p', { class: 'muted' }, t('histEmpty')),
+    hist.length ? h('button', { class: 'btn ghost', type: 'button', onclick: () => {
+      if (!window.confirm(t('histClearConfirm'))) return;
+      store.set('history', []); render();
+    } }, t('histClear')) : null);
+}
+
+function exportData() {
+  const data = { app: 'AAA_frequences', version: 1, exported: new Date().toISOString(),
+    lang, custom: getCustom(), favs: getFavs(), history: getHistory() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = h('a', { href: url, download: 'frequences-' + new Date().toISOString().slice(0, 10) + '.json' });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+function importData(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let d;
+    try { d = JSON.parse(String(reader.result)); } catch (e) { toast(t('importBad')); return; }
+    if (!d || typeof d !== 'object' || !Array.isArray(d.custom || []) ) { toast(t('importBad')); return; }
+    if (!window.confirm(t('importConfirm'))) return;
+    const custom = (d.custom || []).map((o) => validateProgram(o).prog).filter(Boolean).slice(0, 200);
+    const ids = new Set(allPrograms().map((p) => p.id).concat(custom.map((p) => p.id)));
+    const favs = (Array.isArray(d.favs) ? d.favs : []).filter((x) => typeof x === 'string' && ids.has(x));
+    const history = (Array.isArray(d.history) ? d.history : []).slice(0, 500).map((e) => ({
+      d: Number(e && e.d) || 0,
+      name: e && typeof e.name === 'object' && e.name
+        ? { fr: String(e.name.fr || '').slice(0, 80), en: String(e.name.en || '').slice(0, 80) }
+        : String((e && e.name) || '').slice(0, 80),
+      sec: Math.max(0, Math.round(Number(e && e.sec) || 0)),
+      intention: String((e && e.intention) || '').slice(0, 200)
+    }));
+    store.set('custom', custom); store.set('favs', favs); store.set('history', history);
+    if (d.lang === 'en' || d.lang === 'fr') { lang = d.lang; store.set('lang', lang); }
+    toast(t('importOk')); render();
+  };
+  reader.readAsText(file);
+}
+
+function viewSettings() {
+  const choice = statsChoice();
+  const file = h('input', { type: 'file', accept: 'application/json,.json', hidden: true });
+  file.addEventListener('change', () => { if (file.files[0]) importData(file.files[0]); file.value = ''; });
+  return h('div', null,
+    h('h1', null, t('settings')),
+    storageWorks() ? null : h('div', { class: 'alert high' }, t('storageOff')),
+    h('h2', null, t('language')),
+    h('div', { class: 'row' },
+      h('button', { class: 'chip', type: 'button', 'aria-pressed': String(lang === 'fr'), onclick: () => setLang('fr') }, 'Français'),
+      h('button', { class: 'chip', type: 'button', 'aria-pressed': String(lang === 'en'), onclick: () => setLang('en') }, 'English')),
+    h('h2', null, t('stats')),
+    h('p', null, t('statsQ')),
+    h('div', { class: 'row' },
+      h('button', { class: 'chip', type: 'button', 'aria-pressed': String(choice === 'yes'),
+        onclick: () => { setStats('yes'); toast(t('statsOn')); render(); } }, t('yes')),
+      h('button', { class: 'chip', type: 'button', 'aria-pressed': String(choice !== 'yes'),
+        onclick: () => { setStats('no'); toast(t('statsOff')); render(); } }, t('no'))),
+    h('p', { class: 'muted small' }, t('statsExplain')),
+    h('h2', null, t('data')),
+    h('button', { class: 'btn', type: 'button', onclick: exportData }, t('exportBtn')),
+    h('button', { class: 'btn', type: 'button', onclick: () => file.click() }, t('importBtn')), file,
+    installButton());
+}
+
+/* ===================== NAVIGATION ===================== */
+function setLang(l) {
+  lang = l === 'en' ? 'en' : 'fr';
+  store.set('lang', lang);
+  render();
+}
+document.getElementById('lang-btn').addEventListener('click', () => setLang(lang === 'fr' ? 'en' : 'fr'));
+
+const NAV = [['#home', '🏠', 'home'], ['#mine', '➕', 'mine'], ['#history', '🕘', 'history'], ['#settings', '⚙️', 'settings']];
+
+function render() {
+  document.documentElement.lang = lang;
+  document.title = t('appName');
+  document.getElementById('brand-name').textContent = t('appName');
+  const lb = document.getElementById('lang-btn');
+  lb.replaceChildren(lang === 'fr' ? h('b', null, 'FR') : h('span', null, 'FR'), ' | ', lang === 'en' ? h('b', null, 'EN') : h('span', null, 'EN'));
+  lb.setAttribute('aria-label', lang === 'fr' ? 'Switch to English' : 'Passer en français');
+  document.getElementById('footer').textContent = t('footer');
+
+  const [route, arg] = (location.hash || '#home').split('/');
+  const id = arg ? decodeURIComponent(arg) : '';
+  if (route !== '#run' && Session.active) stopSession(false);   // quitter l'écran de séance = arrêter
+  runEls = null; listBox = null;
+
+  let view;
+  const asking = statsChoice() === null;
+  if (asking) view = viewStatsAsk();
+  else if (route === '#p') view = viewProgram(id);
+  else if (route === '#ear') view = viewEar(id);
+  else if (route === '#run') view = viewRun();
+  else if (route === '#mine') view = viewMine();
+  else if (route === '#edit') view = viewEdit(id);
+  else if (route === '#history') view = viewHistory();
+  else if (route === '#settings') view = viewSettings();
+  else view = viewHome();
+
+  const hideNav = asking || route === '#run';
+  const nav = document.getElementById('nav');
+  nav.hidden = hideNav;
+  document.body.classList.toggle('no-nav', hideNav);
+  const navRoute = route === '#p' || route === '#ear' ? '#home' : route === '#edit' ? '#mine' : route;
+  nav.replaceChildren(...NAV.map(([href, ico, key]) => h('a', { href, 'aria-current': navRoute === href ? 'page' : null },
+    h('span', { class: 'ico', 'aria-hidden': 'true' }, ico), t(key))));
+
+  document.getElementById('app').replaceChildren(view);
+  if (route === '#run') updateRun();
+  window.scrollTo(0, 0);
+}
+window.addEventListener('hashchange', render);
+
+/* ===================== DÉMARRAGE ===================== */
+render();
+loadStats();     // ne fait rien tant que la réponse n'est pas « Oui »
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "Fréquences — relaxation sonore",
+  "short_name": "Fréquences",
+  "description": "Outil personnel de relaxation sonore / Personal sound relaxation tool",
+  "lang": "fr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#14223f",
+  "theme_color": "#1f3a6b",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
